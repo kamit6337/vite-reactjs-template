@@ -9,6 +9,7 @@
   "files": [
     "template-reactjs-rest-api",
     "index.js",
+    "gitignore.js",
     "package.json",
     "README.md"
   ],
