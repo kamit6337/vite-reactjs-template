@@ -31,27 +31,24 @@ const OtpInput = ({
   };
 
   return (
-    <div className="mt-2 w-full space-y-1">
-      <p className="text-black">Code</p>
-      <div className="flex w-full items-center justify-between">
-        {otp.map((value: string, index) => {
-          return (
-            <input
-              key={index}
-              type="text"
-              maxLength={1}
-              required={true}
-              value={value}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              onChange={(e) => handleChange(e, index)}
-              className="flex h-[48px] w-[46px] items-center justify-center rounded-md border border-box_border px-4 text-lg text-black shadow-sm"
-            />
-          );
-        })}
-      </div>
+    <div className="flex w-full items-center justify-between gap-2">
+      {otp.map((value, index) => {
+        return (
+          <input
+            key={index}
+            type="text"
+            maxLength={1}
+            required={true}
+            value={value}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            onChange={(e) => handleChange(e, index)}
+            className="flex h-[48px] items-center auth_input text-center"
+          />
+        );
+      })}
     </div>
   );
 };

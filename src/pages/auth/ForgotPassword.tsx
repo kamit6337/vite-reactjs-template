@@ -1,8 +1,8 @@
-import Box from "@/components/custom/Box";
 import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
 import { postAuthReq } from "@/utils/api/authApi";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Cookies from "js-cookie";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -30,9 +30,10 @@ const ForgotPassword = () => {
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
       const response = await postAuthReq("/forgot", values);
+      Cookies.set("email", values.email, { expires: 1 });
       showSuccessMessage({ message: response.message });
       setTimeout(() => {
-        navigate("/login");
+        navigate("/email/verify");
       }, 2000);
     } catch (error) {
       showErrorMessage({
@@ -50,30 +51,35 @@ const ForgotPassword = () => {
         <title>Forgot Password</title>
         <meta
           name="discription"
-          content="Forgot Password page of Voosh project"
+          content="Forgot Password page of this project"
         />
       </Helmet>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box title="Forgot Password">
-          <div>
-            <input
-              type="email"
-              {...register("email")}
-              className="input"
-              placeholder="Email"
-            />
-            {errors.email?.message && (
-              <p className="input_error">{errors.email.message}</p>
-            )}
-          </div>
-          <button
-            className="btn_submit text-light_white"
-            disabled={isSubmitting}
-            type="submit"
-          >
-            {isSubmitting ? <Loading /> : "Submit"}
-          </button>
-        </Box>
+      <p className="auth_page_title">Forgot Password</p>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-3">
+        <div className="w-full">
+          <input
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+            })}
+            placeholder="Email"
+            className="auth_input"
+            autoComplete="off"
+            spellCheck="false"
+          />
+
+          <p role="alert" className="text-xs text-red-500 pl-2 h-4 mt-[2px]">
+            {errors.email?.message}
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="auth_btn auth_submit_btn"
+        >
+          {isSubmitting ? <Loading hScreen={false} small={true} /> : "Submit"}
+        </button>
       </form>
     </>
   );

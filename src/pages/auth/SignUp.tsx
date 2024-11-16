@@ -1,13 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Box from "@/components/custom/Box";
 import { Link, useNavigate } from "react-router-dom";
 import Toastify from "@/lib/Toastify";
 import { postAuthReq } from "@/utils/api/authApi";
 import Loading from "@/lib/Loading";
 import environment from "@/utils/environment";
 import Helmet from "react-helmet";
+import { useState } from "react";
+import ReactIcons from "@/assets/icons";
+import CustomImages from "@/assets/images";
+import Cookies from "js-cookie";
 
 const schema = z
   .object({
@@ -24,6 +27,12 @@ const schema = z
 const SignUp = () => {
   const { showErrorMessage } = Toastify();
   const navigate = useNavigate();
+  const [toggle, setToggle] = useState({
+    password: false,
+    confirmPassword: false,
+  });
+  const [passwordInFocus, setPasswordInFocus] = useState(false);
+  const [confirmPasswordInFocus, setConfirmPasswordInFocus] = useState(false);
 
   const {
     register,
@@ -41,15 +50,13 @@ const SignUp = () => {
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
     const formData = { ...values };
-
     delete formData.confirmPassword;
 
     try {
       await postAuthReq("/signup", formData);
-      localStorage.setItem("email", formData.email);
+      Cookies.set("email", formData.email, { expires: 1 });
       navigate("/signup/verify");
     } catch (error) {
-      console.log("error", error);
       showErrorMessage({
         message:
           error instanceof Error ? error?.message : "Something went wrong",
@@ -82,74 +89,170 @@ const SignUp = () => {
         <title>SignUp</title>
         <meta name="discription" content="Sign up page of Voosh project" />
       </Helmet>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box title="Sign Up">
-          <div>
-            <input
-              {...register("name")}
-              className="input"
-              placeholder="First Name"
-            />
-            {errors.name && (
-              <p className="input_error">{errors.name.message}</p>
-            )}
-          </div>
+      {/* MARK: FORM AND GO TO LOGIN BUTTON*/}
+      <p className="auth_page_title">Sign Up.</p>
 
-          <div>
-            <input
-              {...register("email")}
-              className="input"
-              placeholder="Email"
-            />
-            {errors.email && (
-              <p className="input_error">{errors.email.message}</p>
-            )}
-          </div>
-          <div>
-            <input
-              type="password"
-              {...register("password")}
-              className="input"
-              placeholder="Password"
-            />
-            {errors.password && (
-              <p className="input_error">{errors.password.message}</p>
-            )}
-          </div>
-          <div>
-            <input
-              type="password"
-              {...register("confirmPassword")}
-              className="input"
-              placeholder="Confirm Password"
-            />
-            {errors.confirmPassword && (
-              <p className="input_error">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-          <button
-            type="submit"
-            className="btn_submit text-light_white"
-            disabled={isSubmitting}
+      {/* MARK: GO TO OAUTH LOGIN PAGE*/}
+      <div
+        className="border border-auth_input_border rounded-lg py-3 w-full cursor-pointer flex justify-center items-center gap-4 hover:bg-auth_input_border"
+        onClick={() => googleOAuth()}
+      >
+        <div className="w-6">
+          <img
+            src={CustomImages.googleIcon}
+            alt="Google Icon"
+            className="w-full object-cover bg-transparent"
+          />
+        </div>
+        <p>Continue with Google</p>
+      </div>
+
+      <div className="w-full flex items-center gap-2 my-10">
+        <div className="flex-1 h-[2px]  bg-auth_input_border" />
+        <p className="text-auth_input_border">Or</p>
+        <div className="flex-1 h-[2px]  bg-auth_input_border" />
+      </div>
+
+      {/* MARK: SIGNUP FORM*/}
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-3">
+        {/* MARK: NAME FIELD*/}
+        <div className="w-full">
+          <input
+            type="text"
+            {...register("name", {
+              required: "Name is Required",
+            })}
+            placeholder="Name"
+            className="auth_input"
+            autoComplete="off"
+            spellCheck="false"
+          />
+
+          <p role="alert" className="text-xs text-red-500 pl-2 h-4">
+            {errors.name && errors.name.message}
+          </p>
+        </div>
+
+        {/* MARK: EMAIL FIELD*/}
+        <div className="w-full">
+          <input
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+            })}
+            placeholder="Email"
+            className="auth_input"
+            autoComplete="off"
+            spellCheck="false"
+          />
+
+          <p role="alert" className="text-xs text-red-500 pl-2 h-4">
+            {errors.email && errors.email.message}
+          </p>
+        </div>
+
+        {/* MARK: PASSWORD FIELD*/}
+        <div>
+          <div
+            className={`${
+              passwordInFocus ? "border-white" : "border-auth_input_border"
+            }  h-12 flex justify-between items-center border  rounded-lg w-full `}
           >
-            {isSubmitting ? <Loading /> : "Signup"}
-          </button>
-          <div className="flex justify-center gap-2 font-semibold ">
-            <p className="text-black">Already have an account?</p>
-            <Link to={`/login`} className="text-dark_blue">
-              Login
-            </Link>
-          </div>
-          <div className="flex justify-center">
+            <input
+              type={toggle.password ? "text" : "password"}
+              {...register("password", { required: "Password in required" })}
+              placeholder="Password"
+              className="auth_input_password"
+              onFocus={() => setPasswordInFocus(true)}
+              onBlur={() => setPasswordInFocus(false)}
+            />
+
             <div
-              className="bg-dark_blue p-2 rounded-lg text-white cursor-pointer"
-              onClick={googleOAuth}
+              className={`text-gray-300 cursor-pointer w-14 h-full flex justify-center items-center`}
+              onClick={() =>
+                setToggle((prev) => {
+                  return {
+                    ...prev,
+                    password: !prev.password,
+                  };
+                })
+              }
             >
-              Signup with{" "}
-              <span className="font-semibold tracking-wider">Google</span>
+              {toggle.password ? (
+                <ReactIcons.eyeOff className="text-xl" />
+              ) : (
+                <ReactIcons.eyeOn className="text-xl" />
+              )}
             </div>
           </div>
-        </Box>
+          <p role="alert" className="text-xs text-red-500 pl-2 h-4 mt-[2px]">
+            {errors.password?.message}
+          </p>
+        </div>
+
+        {/* MARK: CONFIRM PASSWORD FIELD*/}
+        <div>
+          <div
+            className={`${
+              confirmPasswordInFocus
+                ? "border-white"
+                : "border-auth_input_border"
+            }  h-12 flex justify-between items-center border  rounded-lg w-full `}
+          >
+            <input
+              type={toggle.confirmPassword ? "text" : "password"}
+              {...register("confirmPassword", {
+                required: "Confirm Password in required",
+              })}
+              placeholder="Confirm Password"
+              className="auth_input_password"
+              onFocus={() => setConfirmPasswordInFocus(true)}
+              onBlur={() => setConfirmPasswordInFocus(false)}
+            />
+
+            <div
+              className={`text-gray-300 cursor-pointer w-14 h-full flex justify-center items-center`}
+              onClick={() =>
+                setToggle((prev) => {
+                  return {
+                    ...prev,
+                    confirmPassword: !prev.confirmPassword,
+                  };
+                })
+              }
+            >
+              {toggle.confirmPassword ? (
+                <ReactIcons.eyeOff className="text-xl" />
+              ) : (
+                <ReactIcons.eyeOn className="text-xl" />
+              )}
+            </div>
+          </div>
+          <p role="alert" className="text-xs text-red-500 pl-2 h-4 mt-[2px]">
+            {errors.confirmPassword?.message}
+          </p>
+        </div>
+
+        {/* MARK: SUBMIT BUTTON*/}
+        <div className="space-y-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="auth_submit_btn auth_btn"
+          >
+            {isSubmitting ? (
+              <Loading hScreen={false} small={true} />
+            ) : (
+              "Sign Up."
+            )}
+          </button>
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-sm">Already had account?</p>
+            <Link to={`/login`}>
+              <p className="font-bold">Login</p>
+            </Link>
+          </div>
+        </div>
       </form>
     </>
   );

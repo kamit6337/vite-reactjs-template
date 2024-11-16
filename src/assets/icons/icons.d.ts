@@ -3,6 +3,8 @@ declare module "@/assets/icons" {
 
   const ReactIcons: {
     notepad: IconType;
+    eyeOn: IconType;
+    eyeOff: IconType;
   };
 
   export default ReactIcons;

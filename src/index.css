@@ -90,27 +90,29 @@
 }
 
 @layer utilities {
-  .input {
-    @apply border-2 border-gray-300 text-my_black w-full p-2;
+  .auth_submit_btn {
+    @apply flex py-3 w-full items-center justify-center rounded-md font-bold  tracking-wider text-white hover:brightness-95;
   }
 
-  .btn_submit {
-    @apply bg-dark_blue h-12;
+  .auth_page_title {
+    @apply text-2xl font-bold tracking-wide mb-10;
   }
 
-  .input_error {
-    @apply text-xs text-red-500 mt-[2px];
+  .auth_input {
+    @apply border border-auth_input_border w-full p-3 rounded-lg bg-auth_background;
   }
 
-  .todo_btn {
-    @apply py-1 px-2 rounded-md;
+  .auth_input_password {
+    @apply outline-none border-none w-full px-3 h-full rounded-l-lg bg-auth_background;
   }
+}
 
-  .todo_save_btn {
-    @apply bg-foreground text-background hover:scale-95 duration-300 px-4 py-2 rounded-md;
-  }
-
-  .todo_cancel_btn {
-    @apply bg-cancel_btn hover:scale-95 duration-300 px-4 py-2 rounded-md;
-  }
+/* NOTE: AUTH BUTTON GRADIENT */
+.auth_btn {
+  background: rgb(183, 46, 178);
+  background: linear-gradient(
+    95deg,
+    rgba(183, 46, 178, 1) 30%,
+    rgba(223, 106, 186, 1) 80%
+  );
 }

@@ -20,7 +20,7 @@ const AuthLayout = () => {
             className="w-full object-cover"
           />
         </div>
-        <div className="max-w-xl w-full flex flex-col items-center">
+        <div className="max-w-xl w-full flex flex-col items-center z-10">
           <Outlet />
         </div>
       </div>
