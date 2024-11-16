@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Helmet from "react-helmet";
 import Cookies from "js-cookie";
 import VerifyOTP from "@/components/auth/VerifyOTP";
-import useLoginCheck from "@/hooks/useLoginCheck";
+import useLoginCheck from "@/hooks/auth/useLoginCheck";
 
 const VerifySignUp = () => {
   const { refetch } = useLoginCheck(false);

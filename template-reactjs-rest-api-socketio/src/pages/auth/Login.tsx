@@ -11,7 +11,7 @@ import { useLayoutEffect, useState } from "react";
 import CustomImages from "@/assets/images";
 import ReactIcons from "@/assets/icons";
 import Cookies from "js-cookie";
-import useLoginCheck from "@/hooks/useLoginCheck";
+import useLoginCheck from "@/hooks/auth/useLoginCheck";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
