@@ -51,4 +51,4 @@ dist
 .pnp.*
 `;
 
-export default gitignore;
+module.exports = gitignore;
