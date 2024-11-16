@@ -8,6 +8,7 @@
   },
   "files": [
     "template-reactjs-rest-api",
+    "template-reactjs-rest-api-socketio",
     "index.js",
     "gitignore.js",
     "package.json",
@@ -15,6 +16,7 @@
   ],
   "keywords": [
     "template-reactjs-rest-api",
+    "template-reactjs-rest-api-socketio",
     "nodejs",
     "server",
     "amit"

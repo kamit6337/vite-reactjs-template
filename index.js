@@ -17,8 +17,14 @@ function createGitignore(destFolder) {
   console.log(".gitignore created successfully.");
 }
 
-function copyTemplate(destFolder) {
-  const templatePath = path.join(__dirname, "template-reactjs-rest-api");
+function copyTemplate(destFolder, isIncludeSocketIo) {
+  let pathFile = "template-reactjs-rest-api";
+
+  if (isIncludeSocketIo) {
+    pathFile = "template-reactjs-rest-api-socketio";
+  }
+
+  const templatePath = path.join(__dirname, pathFile);
 
   try {
     fs.cpSync(templatePath, destFolder, { recursive: true });
@@ -45,6 +51,20 @@ function installDependencies(destFolder) {
   }
 }
 
+async function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) =>
+    rl.question(query, (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    })
+  );
+}
+
 async function main() {
   const projectName = process.argv[2] || "my-reactjs-app";
   const isCurrentDir = projectName === ".";
@@ -61,7 +81,22 @@ async function main() {
     fs.mkdirSync(projectPath);
   }
 
-  copyTemplate(projectPath);
+  // Ask the user for API type preference
+  const answer = await askQuestion(
+    "Would like to include Socket.IO? (yes or no, default is no): "
+  );
+
+  let isIncludeSocketIo = false;
+
+  if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+    isIncludeSocketIo = true;
+  } else {
+    isIncludeSocketIo = false;
+  }
+
+  // Copy template files to root project directory
+  copyTemplate(projectPath, isIncludeSocketIo);
+
   installDependencies(projectPath);
 
   console.log("React JS app created successfully!");
