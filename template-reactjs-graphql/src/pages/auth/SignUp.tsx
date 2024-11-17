@@ -70,6 +70,8 @@ const SignUp = () => {
   }, [data]);
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
+    if (loading) return;
+
     const formData = { ...values };
     delete formData.confirmPassword;
 

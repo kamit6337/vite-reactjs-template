@@ -1,10 +1,13 @@
 import ReactIcons from "@/assets/icons";
+import newPasswordSchema, {
+  newPasswordDataQuery,
+} from "@/graphql/auth/newPasswordSchema";
 import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
-import { postAuthReq } from "@/utils/api/authApi";
+import { useMutation } from "@apollo/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Cookies from "js-cookie";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +25,7 @@ const schema = z
 
 const NewPassword = () => {
   const email = Cookies.get("email");
-  const { showErrorMessage, showSuccessMessage } = Toastify();
+  const { showErrorMessage } = Toastify();
   const navigate = useNavigate();
   const [toggle, setToggle] = useState({
     password: false,
@@ -31,10 +34,13 @@ const NewPassword = () => {
   const [passwordInFocus, setPasswordInFocus] = useState(false);
   const [confirmPasswordInFocus, setConfirmPasswordInFocus] = useState(false);
 
+  const [mutate, { loading, error, reset, data }] =
+    useMutation(newPasswordSchema);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -43,7 +49,23 @@ const NewPassword = () => {
     },
   });
 
+  useEffect(() => {
+    if (error) {
+      showErrorMessage({ message: error.message });
+      reset();
+    }
+  }, [error, showErrorMessage]);
+
+  useEffect(() => {
+    if (data && data[newPasswordDataQuery]) {
+      Cookies.remove("email");
+      navigate("/login");
+    }
+  }, [data]);
+
   const onSubmit = async (values: z.infer<typeof schema>) => {
+    if (loading) return;
+
     if (!email) {
       showErrorMessage({ message: "Something went wrong. Please try again." });
       setTimeout(() => {
@@ -57,20 +79,9 @@ const NewPassword = () => {
 
     const data = { ...formData, email };
 
-    try {
-      const response = await postAuthReq("/newPassword", data);
-      Cookies.remove("email");
-
-      showSuccessMessage({ message: response.message });
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-    } catch (error) {
-      showErrorMessage({
-        message:
-          error instanceof Error ? error?.message : "Something went wrong",
-      });
-    }
+    mutate({
+      variables: data,
+    });
   };
 
   return (
@@ -166,10 +177,10 @@ const NewPassword = () => {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={loading}
           className="auth_btn auth_submit_btn"
         >
-          {isSubmitting ? <Loading hScreen={false} small={true} /> : "Submit"}
+          {loading ? <Loading hScreen={false} small={true} /> : "Submit"}
         </button>
       </form>
     </>

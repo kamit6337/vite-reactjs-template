@@ -76,6 +76,8 @@ const Login = () => {
   }, [data]);
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
+    if (loading) return;
+
     mutate({
       variables: values,
     });
