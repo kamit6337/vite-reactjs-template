@@ -9,17 +9,18 @@
   "files": [
     "template-reactjs-rest-api",
     "template-reactjs-rest-api-socketio",
+    "template-reactjs-graphql",
     "index.js",
     "gitignore.js",
     "package.json",
     "README.md"
   ],
   "keywords": [
-    "template-reactjs-rest-api",
-    "template-reactjs-rest-api-socketio",
-    "nodejs",
-    "server",
-    "amit"
+    "reactjs",
+    "docker",
+    "github",
+    "graphql",
+    "nginx"
   ],
   "author": "Amit Kumar",
   "license": "MIT"

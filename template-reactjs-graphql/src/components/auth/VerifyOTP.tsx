@@ -7,36 +7,35 @@ import Loading from "@/lib/Loading";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
-  callback: (email: string, otp: string) => Promise<void>;
+  mutate: ({
+    variables: { email, otp },
+  }: {
+    variables: { email: string; otp: string };
+  }) => void;
+  loading: boolean;
 };
 
-const VerifyOTP = ({ callback }: Props) => {
+const VerifyOTP = ({ mutate, loading }: Props) => {
   const navigate = useNavigate();
   const email = Cookies.get("email") as string;
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
-  const [isLoading, setIsLoading] = useState(false);
   const { showErrorMessage } = Toastify();
 
   const handleSubmit = async () => {
-    try {
-      if (!email) {
-        showErrorMessage({ message: "Something went wrong" });
-        setTimeout(() => {
-          navigate(-1);
-        }, 5000);
-        return;
-      }
+    if (loading) return; // Prevent multiple calls during loading
 
-      setIsLoading(true);
-      const modifyOtp = otp.join("");
-      await callback(email, modifyOtp);
-    } catch (error) {
-      showErrorMessage({
-        message: "Something went wrong. Please try later",
-      });
-    } finally {
-      setIsLoading(false);
+    if (!email) {
+      showErrorMessage({ message: "Something went wrong" });
+      setTimeout(() => {
+        navigate(-1);
+      }, 5000);
+      return;
     }
+    const modifyOtp = otp.join("");
+
+    mutate({
+      variables: { otp: modifyOtp, email: email },
+    });
   };
 
   return (
@@ -47,11 +46,11 @@ const VerifyOTP = ({ callback }: Props) => {
       </div>
       <OtpInput otp={otp} cb={(value) => setOtp(value)} />
       <button
-        disabled={isLoading}
+        disabled={loading}
         onClick={handleSubmit}
         className="mt-12 auth_submit_btn auth_btn"
       >
-        {isLoading ? <Loading small={true} /> : "Verify"}
+        {loading ? <Loading small={true} /> : "Verify"}
       </button>
     </div>
   );

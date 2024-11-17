@@ -17,14 +17,22 @@ function createGitignore(destFolder) {
   console.log(".gitignore created successfully.");
 }
 
-function copyTemplate(destFolder, isIncludeSocketIo) {
-  let pathFile = "template-reactjs-rest-api";
+function copyTemplate(destFolder, apiChoice, isIncludeSocketIo) {
+  let filePath = "";
+
+  if (apiChoice === "graphql") {
+    filePath = "template-reactjs-graphql";
+  } else if (isIncludeSocketIo) {
+    filePath = "template-reactjs-rest-api-socketio";
+  } else {
+    filePath = "template-reactjs-rest-api";
+  }
 
   if (isIncludeSocketIo) {
     pathFile = "template-reactjs-rest-api-socketio";
   }
 
-  const templatePath = path.join(__dirname, pathFile);
+  const templatePath = path.join(__dirname, filePath);
 
   try {
     fs.cpSync(templatePath, destFolder, { recursive: true });
@@ -83,19 +91,26 @@ async function main() {
 
   // Ask the user for API type preference
   const answer = await askQuestion(
-    "Would like to include Socket.IO? (yes or no, default is no): "
+    "Which API style would you like to use? (rest-api or graphql, default is rest-api): "
   );
+  const apiChoice = answer.toLowerCase() === "graphql" ? "graphql" : "rest-api";
 
   let isIncludeSocketIo = false;
 
-  if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
-    isIncludeSocketIo = true;
-  } else {
-    isIncludeSocketIo = false;
+  if (apiChoice === "rest-api") {
+    const answer = await askQuestion(
+      "Want to include socket.io? (yes or no, default is no): "
+    );
+
+    if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
+      isIncludeSocketIo = true;
+    } else {
+      isIncludeSocketIo = false;
+    }
   }
 
   // Copy template files to root project directory
-  copyTemplate(projectPath, isIncludeSocketIo);
+  copyTemplate(projectPath, apiChoice, isIncludeSocketIo);
 
   installDependencies(projectPath);
 

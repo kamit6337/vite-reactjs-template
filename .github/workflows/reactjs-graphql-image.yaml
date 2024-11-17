@@ -1,4 +1,4 @@
-name: create-reactjs-rest-api-image
+name: reactjs-graphql-image
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build the Docker image
-        run: docker build -t kamit6337/template-reactjs-rest-api:latest ./template-reactjs-rest-api
+        run: docker build -t kamit6337/template-reactjs-graphql:latest ./template-reactjs-graphql
 
       - name: Push the Docker image to Docker Hub
-        run: docker push kamit6337/template-reactjs-rest-api:latest
+        run: docker push kamit6337/template-reactjs-graphql:latest

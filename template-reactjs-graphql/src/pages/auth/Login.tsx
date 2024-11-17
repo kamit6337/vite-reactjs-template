@@ -3,15 +3,18 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Loading from "@/lib/Loading";
-import { postAuthReq } from "@/utils/api/authApi";
 import Toastify from "@/lib/Toastify";
 import environment from "@/utils/environment";
 import Helmet from "react-helmet";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import CustomImages from "@/assets/images";
 import ReactIcons from "@/assets/icons";
 import Cookies from "js-cookie";
-import useLoginCheck from "@/hooks/auth/useLoginCheck";
+import { useApolloClient, useMutation } from "@apollo/client";
+import loginSchema, {
+  postLoginUserDataQuery,
+} from "@/graphql/auth/loginSchema";
+import { getLoginCheckDataQuery } from "@/graphql/auth/loginCheckSchema";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,17 +22,19 @@ const schema = z.object({
 });
 
 const Login = () => {
-  const { refetch } = useLoginCheck(false);
+  const client = useApolloClient();
   const navigate = useNavigate();
   const errMsg = useSearchParams()[0].get("msg");
   const { showErrorMessage } = Toastify();
   const [togglePassword, setTogglePassword] = useState(false);
   const [passwordInFocus, setPasswordInFocus] = useState(false);
 
+  const [mutate, { loading, error, reset, data }] = useMutation(loginSchema);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -44,20 +49,36 @@ const Login = () => {
     }
   }, [errMsg, showErrorMessage]);
 
-  const onSubmit = async (values: z.infer<typeof schema>) => {
-    try {
-      const token = await postAuthReq("/login", values);
-      Cookies.set("_use", token, { expires: 30 });
-      refetch();
-      navigate("/");
-    } catch (error) {
-      showErrorMessage({
-        message:
-          error instanceof Error
-            ? error?.message
-            : "Something went wrong. Please try later",
-      });
+  useEffect(() => {
+    if (error) {
+      showErrorMessage({ message: error.message });
+      reset();
     }
+  }, [error, showErrorMessage]);
+
+  useEffect(() => {
+    if (data && data[postLoginUserDataQuery]) {
+      const token = data[postLoginUserDataQuery];
+
+      Cookies.set("_use", token, { expires: 30 });
+
+      // Evict the loginCheck query from the cache
+      client.cache.evict({
+        id: "ROOT_QUERY", // Root query ID
+        fieldName: getLoginCheckDataQuery, // Field name to invalidate
+      });
+
+      // Optional: Clean up evicted cache
+      client.cache.gc();
+
+      navigate("/");
+    }
+  }, [data]);
+
+  const onSubmit = async (values: z.infer<typeof schema>) => {
+    mutate({
+      variables: values,
+    });
   };
 
   const googleOAuth = () => {
@@ -167,14 +188,10 @@ const Login = () => {
         <div className="space-y-2">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={loading}
             className="auth_btn auth_submit_btn"
           >
-            {isSubmitting ? (
-              <Loading hScreen={false} small={true} />
-            ) : (
-              "Sign In."
-            )}
+            {loading ? <Loading hScreen={false} small={true} /> : "Sign In."}
           </button>
           <div className="flex items-center justify-center gap-3">
             <p className="text-sm">don’t have an account?</p>

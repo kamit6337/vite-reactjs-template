@@ -3,14 +3,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import Toastify from "@/lib/Toastify";
-import { postAuthReq } from "@/utils/api/authApi";
 import Loading from "@/lib/Loading";
 import environment from "@/utils/environment";
 import Helmet from "react-helmet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactIcons from "@/assets/icons";
 import CustomImages from "@/assets/images";
 import Cookies from "js-cookie";
+import { useMutation } from "@apollo/client";
+import signUpSchema, {
+  postSignUpUserDataQuery,
+} from "@/graphql/auth/signUpSchema";
 
 const schema = z
   .object({
@@ -34,10 +37,13 @@ const SignUp = () => {
   const [passwordInFocus, setPasswordInFocus] = useState(false);
   const [confirmPasswordInFocus, setConfirmPasswordInFocus] = useState(false);
 
+  const [mutate, { loading, error, reset, data }] = useMutation(signUpSchema);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    getValues,
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -48,20 +54,28 @@ const SignUp = () => {
     },
   });
 
+  useEffect(() => {
+    if (error) {
+      showErrorMessage({ message: error.message });
+      reset();
+    }
+  }, [error, showErrorMessage]);
+
+  useEffect(() => {
+    if (data && data[postSignUpUserDataQuery]) {
+      Cookies.set("email", getValues().email, { expires: 1 });
+
+      navigate("/signup/verify");
+    }
+  }, [data]);
+
   const onSubmit = async (values: z.infer<typeof schema>) => {
     const formData = { ...values };
     delete formData.confirmPassword;
 
-    try {
-      await postAuthReq("/signup", formData);
-      Cookies.set("email", formData.email, { expires: 1 });
-      navigate("/signup/verify");
-    } catch (error) {
-      showErrorMessage({
-        message:
-          error instanceof Error ? error?.message : "Something went wrong",
-      });
-    }
+    mutate({
+      variables: formData,
+    });
   };
 
   const googleOAuth = () => {
@@ -237,14 +251,10 @@ const SignUp = () => {
         <div className="space-y-2">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={loading}
             className="auth_submit_btn auth_btn"
           >
-            {isSubmitting ? (
-              <Loading hScreen={false} small={true} />
-            ) : (
-              "Sign Up."
-            )}
+            {loading ? <Loading hScreen={false} small={true} /> : "Sign Up."}
           </button>
           <div className="flex items-center justify-center gap-3">
             <p className="text-sm">Already had account?</p>
