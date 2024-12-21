@@ -8,7 +8,6 @@ import AuthLayout from "@/layout/AuthLayout";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import NewPassword from "@/pages/auth/NewPassword";
 import VerifyOAuthLogin from "@/pages/auth/VerifyOAuthLogin";
-import EmailVerify from "@/pages/auth/EmailVerify";
 
 const Router = () => {
   return (
@@ -20,7 +19,6 @@ const Router = () => {
         <Route path="/signup/verify" element={<VerifySignUp />} />
         <Route path="/oauth" element={<VerifyOAuthLogin />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
-        <Route path="/email/verify" element={<EmailVerify />} />
         <Route path="/newPassword" element={<NewPassword />} />
       </Route>
 

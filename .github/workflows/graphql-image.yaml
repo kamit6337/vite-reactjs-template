@@ -1,4 +1,4 @@
-name: reactjs-graphql-image
+name: ReactJS GraphQL Image Template
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build the Docker image
-        run: docker build -t kamit6337/template-reactjs-graphql:latest ./template-reactjs-graphql
+        run: docker build -t kamit6337/template-reactjs-graphql:latest ./graphql
 
       - name: Push the Docker image to Docker Hub
         run: docker push kamit6337/template-reactjs-graphql:latest

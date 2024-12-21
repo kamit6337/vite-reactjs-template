@@ -1,4 +1,4 @@
-name: reactjs-rest-api-socketio-image
+name: ReactJS REST-APIs SocketIO Image Template
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build the Docker image
-        run: docker build -t kamit6337/template-reactjs-rest-api-socketio:latest ./template-reactjs-rest-api-socketio
+        run: docker build -t kamit6337/template-reactjs-rest-api-socketio:latest ./rest-api-socketio
 
       - name: Push the Docker image to Docker Hub
         run: docker push kamit6337/template-reactjs-rest-api-socketio:latest

@@ -7,9 +7,9 @@
     "amit-reactjs-app": "./index.js"
   },
   "files": [
-    "template-reactjs-rest-api",
-    "template-reactjs-rest-api-socketio",
-    "template-reactjs-graphql",
+    "rest-api",
+    "rest-api-socketio",
+    "graphql",
     "index.js",
     "gitignore.js",
     "package.json",

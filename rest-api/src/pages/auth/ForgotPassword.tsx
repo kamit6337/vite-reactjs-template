@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Cookies from "js-cookie";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 const schema = z.object({
@@ -13,7 +12,6 @@ const schema = z.object({
 });
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const { showErrorMessage, showSuccessMessage } = Toastify();
 
   const {
@@ -29,12 +27,9 @@ const ForgotPassword = () => {
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
-      const response = await postAuthReq("/forgot", values);
+      const response = await postAuthReq("/forgotPassword", values);
       Cookies.set("email", values.email, { expires: 1 });
       showSuccessMessage({ message: response.message });
-      setTimeout(() => {
-        navigate("/email/verify");
-      }, 2000);
     } catch (error) {
       showErrorMessage({
         message:
