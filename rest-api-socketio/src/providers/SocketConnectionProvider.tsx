@@ -1,5 +1,5 @@
-import useExampleSocket from "@/hooks/socketIO/useExampleSocket";
-import { isConnected } from "@/lib/socketIO";
+import useExampleSocket from "@/hooks/sockets/useExampleSocket";
+import getSocket from "@/lib/socketConnection";
 import { useEffect } from "react";
 
 const SocketConnectionProvider = ({
@@ -7,11 +7,14 @@ const SocketConnectionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  useEffect(() => {
-    isConnected();
-  }, []);
+  const socket = getSocket();
 
-  useExampleSocket();
+  useExampleSocket(socket);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit("isConnected", "I am from Client");
+  }, [socket]);
 
   return <>{children}</>;
 };

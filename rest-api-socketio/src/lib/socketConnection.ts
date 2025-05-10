@@ -1,11 +1,11 @@
 import { io, Socket } from "socket.io-client";
 import environment from "@/utils/environment";
-import Cookies from "js-cookie";
+import getAuthToken from "@/utils/api/getAuthToken";
 
 let socket: Socket | null = null;
 
 const getSocket = (): Socket => {
-  const token = Cookies.get("_use");
+  const token = getAuthToken();
 
   if (!socket || !socket.connected) {
     socket = io(environment.SERVER_URL, {

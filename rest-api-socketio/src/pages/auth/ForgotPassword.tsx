@@ -2,7 +2,6 @@ import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
 import { postAuthReq } from "@/utils/api/authApi";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Cookies from "js-cookie";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -29,11 +28,10 @@ const ForgotPassword = () => {
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
-      const response = await postAuthReq("/forgot", values);
-      Cookies.set("email", values.email, { expires: 1 });
+      const response = await postAuthReq("/forgotPassword", values);
       showSuccessMessage({ message: response.message });
       setTimeout(() => {
-        navigate("/email/verify");
+        navigate("/login");
       }, 2000);
     } catch (error) {
       showErrorMessage({
@@ -78,7 +76,7 @@ const ForgotPassword = () => {
           disabled={isSubmitting}
           className="auth_btn auth_submit_btn"
         >
-          {isSubmitting ? <Loading hScreen={false} small={true} /> : "Submit"}
+          {isSubmitting ? <Loading height={"full"} small={true} /> : "Submit"}
         </button>
       </form>
     </>

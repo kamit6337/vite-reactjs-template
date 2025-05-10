@@ -8,6 +8,7 @@ import AuthLayout from "@/layout/AuthLayout";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import NewPassword from "@/pages/auth/NewPassword";
 import VerifyOAuthLogin from "@/pages/auth/VerifyOAuthLogin";
+import NotFound from "@/pages/notFound/NotFound";
 
 const Router = () => {
   return (
@@ -26,6 +27,8 @@ const Router = () => {
       <Route path="/" element={<RootLayout />}>
         <Route index element={<Home />} />
       </Route>
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

@@ -171,7 +171,7 @@ const Login = () => {
             className="auth_btn auth_submit_btn"
           >
             {isSubmitting ? (
-              <Loading hScreen={false} small={true} />
+              <Loading height={"full"} small={true} />
             ) : (
               "Sign In."
             )}
