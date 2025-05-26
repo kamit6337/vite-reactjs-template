@@ -4,13 +4,12 @@ import newPasswordSchema, {
 } from "@/graphql/auth/newPasswordSchema";
 import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
-import { useMutation } from "@apollo/client";
+import getGraphql from "@/utils/api/graphql";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
 const schema = z
@@ -24,9 +23,10 @@ const schema = z
   });
 
 const NewPassword = () => {
-  const email = Cookies.get("email");
-  const { showErrorMessage } = Toastify();
+  const resetToken = useSearchParams()[0].get("resetToken");
+  const { showErrorMessage, showSuccessMessage } = Toastify();
   const navigate = useNavigate();
+
   const [toggle, setToggle] = useState({
     password: false,
     confirmPassword: false,
@@ -34,13 +34,10 @@ const NewPassword = () => {
   const [passwordInFocus, setPasswordInFocus] = useState(false);
   const [confirmPasswordInFocus, setConfirmPasswordInFocus] = useState(false);
 
-  const [mutate, { loading, error, reset, data }] =
-    useMutation(newPasswordSchema);
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -49,46 +46,34 @@ const NewPassword = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      showErrorMessage({ message: error.message });
-      reset();
-    }
-  }, [error, showErrorMessage]);
-
-  useEffect(() => {
-    if (data && data[newPasswordDataQuery]) {
-      Cookies.remove("email");
-      navigate("/login");
-    }
-  }, [data]);
-
   const onSubmit = async (values: z.infer<typeof schema>) => {
-    if (loading) return;
+    try {
+      const formData = { ...values };
+      delete formData.confirmPassword;
 
-    if (!email) {
-      showErrorMessage({ message: "Something went wrong. Please try again." });
-      setTimeout(() => {
-        navigate("/forgotPassword");
-      }, 5000);
-      return;
+      const response = await getGraphql(
+        newPasswordSchema,
+        newPasswordDataQuery,
+        { resetToken, password: formData.password }
+      );
+
+      showSuccessMessage({ message: response });
+      navigate("/login");
+    } catch (error) {
+      showErrorMessage({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try later",
+      });
     }
-
-    const formData = { ...values };
-    delete formData.confirmPassword;
-
-    const data = { ...formData, email };
-
-    mutate({
-      variables: data,
-    });
   };
 
   return (
     <>
       <Helmet>
         <title>New Password</title>
-        <meta name="discription" content="New Password page of Voosh project" />
+        <meta name="discription" content="New Password page of this project" />
       </Helmet>
       <p className="auth_page_title">New Password</p>
 
@@ -177,10 +162,10 @@ const NewPassword = () => {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className="auth_btn auth_submit_btn"
         >
-          {loading ? <Loading hScreen={false} small={true} /> : "Submit"}
+          {isSubmitting ? <Loading height={"full"} small={true} /> : "Submit"}
         </button>
       </form>
     </>

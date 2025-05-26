@@ -6,14 +6,13 @@ import Toastify from "@/lib/Toastify";
 import Loading from "@/lib/Loading";
 import environment from "@/utils/environment";
 import Helmet from "react-helmet";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReactIcons from "@/assets/icons";
 import CustomImages from "@/assets/images";
-import Cookies from "js-cookie";
-import { useMutation } from "@apollo/client";
-import signUpSchema, {
-  postSignUpUserDataQuery,
-} from "@/graphql/auth/signUpSchema";
+import getGraphql from "@/utils/api/graphql";
+import signUpUserInitialSchema, {
+  signUpUserInitialDataQuery,
+} from "@/graphql/auth/signUpUserInitialSchema";
 
 const schema = z
   .object({
@@ -28,22 +27,20 @@ const schema = z
   });
 
 const SignUp = () => {
-  const { showErrorMessage } = Toastify();
+  const { showErrorMessage, showSuccessMessage } = Toastify();
   const navigate = useNavigate();
   const [toggle, setToggle] = useState({
     password: false,
     confirmPassword: false,
   });
+
   const [passwordInFocus, setPasswordInFocus] = useState(false);
   const [confirmPasswordInFocus, setConfirmPasswordInFocus] = useState(false);
-
-  const [mutate, { loading, error, reset, data }] = useMutation(signUpSchema);
 
   const {
     register,
     handleSubmit,
-    getValues,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -54,30 +51,32 @@ const SignUp = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      showErrorMessage({ message: error.message });
-      reset();
-    }
-  }, [error, showErrorMessage]);
+  const onSubmit = async (values: z.infer<typeof schema>) => {
+    try {
+      const formData = { ...values };
+      delete formData.confirmPassword;
 
-  useEffect(() => {
-    if (data && data[postSignUpUserDataQuery]) {
-      Cookies.set("email", getValues().email, { expires: 1 });
+      const { name, email, password } = formData;
+
+      const response = await getGraphql(
+        signUpUserInitialSchema,
+        signUpUserInitialDataQuery,
+        { name, email, password }
+      );
+
+      sessionStorage.setItem("email", email);
+
+      showSuccessMessage({ message: response });
 
       navigate("/signup/verify");
+    } catch (error) {
+      showErrorMessage({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try later",
+      });
     }
-  }, [data]);
-
-  const onSubmit = async (values: z.infer<typeof schema>) => {
-    if (loading) return;
-
-    const formData = { ...values };
-    delete formData.confirmPassword;
-
-    mutate({
-      variables: formData,
-    });
   };
 
   const googleOAuth = () => {
@@ -103,7 +102,7 @@ const SignUp = () => {
     <>
       <Helmet>
         <title>SignUp</title>
-        <meta name="discription" content="Sign up page of Voosh project" />
+        <meta name="discription" content="Sign up page of this project" />
       </Helmet>
       {/* MARK: FORM AND GO TO LOGIN BUTTON*/}
       <p className="auth_page_title">Sign Up.</p>
@@ -253,10 +252,14 @@ const SignUp = () => {
         <div className="space-y-2">
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="auth_submit_btn auth_btn"
           >
-            {loading ? <Loading hScreen={false} small={true} /> : "Sign Up."}
+            {isSubmitting ? (
+              <Loading height={"full"} small={true} />
+            ) : (
+              "Sign Up."
+            )}
           </button>
           <div className="flex items-center justify-center gap-3">
             <p className="text-sm">Already had account?</p>

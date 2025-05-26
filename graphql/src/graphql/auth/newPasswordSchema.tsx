@@ -1,10 +1,10 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const newPasswordDataQuery = "newPassword";
 
 const newPasswordSchema = gql`
-  mutation PostNewPassword($email: String!, $password: String!) {
-    newPassword(email: $email, password: $password)
+  mutation NewPassword($resetToken: String, $password: String) {
+    newPassword(resetToken: $resetToken, password: $password)
   }
 `;
 

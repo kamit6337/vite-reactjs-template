@@ -1,41 +1,46 @@
 import Toastify from "@/lib/Toastify";
 import modifyEmail from "@/utils/javascript/modifyEmail";
-import Cookies from "js-cookie";
 import { useState } from "react";
 import OtpInput from "./OtpInput";
 import Loading from "@/lib/Loading";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
-  mutate: ({
-    variables: { email, otp },
-  }: {
-    variables: { email: string; otp: string };
-  }) => void;
-  loading: boolean;
+  callback: (email: string, otp: string) => Promise<void>;
 };
 
-const VerifyOTP = ({ mutate, loading }: Props) => {
+const VerifyOTP = ({ callback }: Props) => {
   const navigate = useNavigate();
-  const email = Cookies.get("email") as string;
+  const email = sessionStorage.getItem("email") as string;
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const { showErrorMessage } = Toastify();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (loading) return; // Prevent multiple calls during loading
+    try {
+      if (isLoading) return; // Prevent multiple calls during loading
 
-    if (!email) {
-      showErrorMessage({ message: "Something went wrong" });
-      setTimeout(() => {
+      if (!email) {
+        showErrorMessage({ message: "Something went wrong" });
         navigate(-1);
-      }, 5000);
-      return;
-    }
-    const modifyOtp = otp.join("");
+        return;
+      }
 
-    mutate({
-      variables: { otp: modifyOtp, email: email },
-    });
+      setIsLoading(true);
+
+      const modifyOtp = otp.join("");
+
+      await callback(email, modifyOtp);
+    } catch (error) {
+      showErrorMessage({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try later",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,11 +51,11 @@ const VerifyOTP = ({ mutate, loading }: Props) => {
       </div>
       <OtpInput otp={otp} cb={(value) => setOtp(value)} />
       <button
-        disabled={loading}
+        disabled={isLoading}
         onClick={handleSubmit}
         className="mt-12 auth_submit_btn auth_btn"
       >
-        {loading ? <Loading small={true} /> : "Verify"}
+        {isLoading ? <Loading height={"full"} small={true} /> : "Verify"}
       </button>
     </div>
   );

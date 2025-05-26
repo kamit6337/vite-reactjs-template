@@ -3,10 +3,8 @@ import forgotPasswordSchema, {
 } from "@/graphql/auth/forgotPasswordSchema";
 import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
-import { useMutation } from "@apollo/client";
+import getGraphql from "@/utils/api/graphql";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Cookies from "js-cookie";
-import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -18,15 +16,12 @@ const schema = z.object({
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
-  const { showErrorMessage } = Toastify();
-  const [mutate, { loading, error, data, reset }] =
-    useMutation(forgotPasswordSchema);
+  const { showErrorMessage, showSuccessMessage } = Toastify();
 
   const {
     register,
     handleSubmit,
-    getValues,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -34,27 +29,29 @@ const ForgotPassword = () => {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      showErrorMessage({ message: error.message });
-      reset();
-    }
-  }, [error, showErrorMessage]);
-
-  useEffect(() => {
-    if (data && data[forgotPasswordDataQuery]) {
-      Cookies.set("email", getValues().email, { expires: 1 });
-
-      navigate("/email/verify");
-    }
-  }, [data]);
-
   const onSubmit = async (values: z.infer<typeof schema>) => {
-    if (loading) return;
+    try {
+      const { email } = values;
 
-    mutate({
-      variables: values,
-    });
+      const response = await getGraphql(
+        forgotPasswordSchema,
+        forgotPasswordDataQuery,
+        {
+          email,
+        }
+      );
+
+      showSuccessMessage({ message: response });
+
+      navigate("/login");
+    } catch (error) {
+      showErrorMessage({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try later",
+      });
+    }
   };
 
   return (
@@ -87,10 +84,10 @@ const ForgotPassword = () => {
         </div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className="auth_btn auth_submit_btn"
         >
-          {loading ? <Loading hScreen={false} small={true} /> : "Submit"}
+          {isSubmitting ? <Loading height={"full"} small={true} /> : "Submit"}
         </button>
       </form>
     </>

@@ -1,3 +1,4 @@
+import useLoginCheck from "@/hooks/auth/useLoginCheck";
 import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
@@ -5,8 +6,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 const VerifyOAuthLogin = () => {
   const navigate = useNavigate();
-
-  const token = useSearchParams()[0].get("token");
+  const token = useSearchParams()[0].get("use");
+  const { refetch } = useLoginCheck(false);
 
   useEffect(() => {
     if (!token) {
@@ -14,7 +15,8 @@ const VerifyOAuthLogin = () => {
       return;
     }
 
-    Cookies.set("_use", token, { expires: 30 });
+    Cookies.set("_use", token, { expires: 90 });
+    refetch();
     navigate("/");
   }, [token, navigate]);
 

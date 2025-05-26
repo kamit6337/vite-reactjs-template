@@ -6,15 +6,15 @@ import Loading from "@/lib/Loading";
 import Toastify from "@/lib/Toastify";
 import environment from "@/utils/environment";
 import Helmet from "react-helmet";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import CustomImages from "@/assets/images";
 import ReactIcons from "@/assets/icons";
 import Cookies from "js-cookie";
-import { useApolloClient, useMutation } from "@apollo/client";
-import loginSchema, {
-  postLoginUserDataQuery,
-} from "@/graphql/auth/loginSchema";
-import { getLoginCheckDataQuery } from "@/graphql/auth/loginCheckSchema";
+import getGraphql from "@/utils/api/graphql";
+import loginUserSchema, {
+  loginUserDataQuery,
+} from "@/graphql/auth/loginUserSchema";
+import useLoginCheck from "@/hooks/auth/useLoginCheck";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -22,19 +22,17 @@ const schema = z.object({
 });
 
 const Login = () => {
-  const client = useApolloClient();
+  const { refetch } = useLoginCheck(false);
   const navigate = useNavigate();
   const errMsg = useSearchParams()[0].get("msg");
   const { showErrorMessage } = Toastify();
   const [togglePassword, setTogglePassword] = useState(false);
   const [passwordInFocus, setPasswordInFocus] = useState(false);
 
-  const [mutate, { loading, error, reset, data }] = useMutation(loginSchema);
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -49,38 +47,26 @@ const Login = () => {
     }
   }, [errMsg, showErrorMessage]);
 
-  useEffect(() => {
-    if (error) {
-      showErrorMessage({ message: error.message });
-      reset();
-    }
-  }, [error, showErrorMessage]);
+  const onSubmit = async (values: z.infer<typeof schema>) => {
+    try {
+      const { email, password } = values;
 
-  useEffect(() => {
-    if (data && data[postLoginUserDataQuery]) {
-      const token = data[postLoginUserDataQuery];
-
-      Cookies.set("_use", token, { expires: 30 });
-
-      // Evict the loginCheck query from the cache
-      client.cache.evict({
-        id: "ROOT_QUERY", // Root query ID
-        fieldName: getLoginCheckDataQuery, // Field name to invalidate
+      const token = await getGraphql(loginUserSchema, loginUserDataQuery, {
+        email,
+        password,
       });
 
-      // Optional: Clean up evicted cache
-      client.cache.gc();
-
+      Cookies.set("_use", token, { expires: 90 });
+      refetch();
       navigate("/");
+    } catch (error) {
+      showErrorMessage({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try later",
+      });
     }
-  }, [data]);
-
-  const onSubmit = async (values: z.infer<typeof schema>) => {
-    if (loading) return;
-
-    mutate({
-      variables: values,
-    });
   };
 
   const googleOAuth = () => {
@@ -106,7 +92,7 @@ const Login = () => {
     <>
       <Helmet>
         <title>Login</title>
-        <meta name="discription" content="Login page of Voosh project" />
+        <meta name="discription" content="Login page of this project" />
       </Helmet>
       {/* MARK: HEADLINE*/}
       <p className="auth_page_title">Sign In.</p>
@@ -190,10 +176,14 @@ const Login = () => {
         <div className="space-y-2">
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="auth_btn auth_submit_btn"
           >
-            {loading ? <Loading hScreen={false} small={true} /> : "Sign In."}
+            {isSubmitting ? (
+              <Loading height={"full"} small={true} />
+            ) : (
+              "Sign In."
+            )}
           </button>
           <div className="flex items-center justify-center gap-3">
             <p className="text-sm">don’t have an account?</p>

@@ -2,48 +2,29 @@ import { useNavigate } from "react-router-dom";
 import Helmet from "react-helmet";
 import Cookies from "js-cookie";
 import VerifyOTP from "@/components/auth/VerifyOTP";
-import { useApolloClient, useMutation } from "@apollo/client";
-import signUpVerifySchema, {
-  postSignUpVerifyDataQuery,
-} from "@/graphql/auth/signUpVerifySchema";
-import { useEffect } from "react";
-import Toastify from "@/lib/Toastify";
-import { getLoginCheckDataQuery } from "@/graphql/auth/loginCheckSchema";
+import getGraphql from "@/utils/api/graphql";
+import signUpUserFinalSchema, {
+  signUpUserFinalDataQuery,
+} from "@/graphql/auth/signUpUserFinalSchema";
+import useLoginCheck from "@/hooks/auth/useLoginCheck";
 
 const VerifySignUp = () => {
-  const client = useApolloClient();
+  const { refetch } = useLoginCheck(false);
   const navigate = useNavigate();
-  const { showErrorMessage } = Toastify();
 
-  const [mutate, { loading, error, reset, data }] =
-    useMutation(signUpVerifySchema);
+  const handleVerify = async (email: string, otp: string) => {
+    const token = await getGraphql(
+      signUpUserFinalSchema,
+      signUpUserFinalDataQuery,
+      { email, otp }
+    );
 
-  useEffect(() => {
-    if (error) {
-      showErrorMessage({ message: error.message });
-      reset();
-    }
-  }, [error, showErrorMessage]);
-
-  useEffect(() => {
-    if (data && data[postSignUpVerifyDataQuery]) {
-      const token = data[postSignUpVerifyDataQuery];
-
-      Cookies.set("_use", token, { expires: 30 });
-      Cookies.remove("email");
-
-      // Evict the loginCheck query from the cache
-      client.cache.evict({
-        id: "ROOT_QUERY", // Root query ID
-        fieldName: getLoginCheckDataQuery, // Field name to invalidate
-      });
-
-      // Optional: Clean up evicted cache
-      client.cache.gc();
-
-      navigate("/");
-    }
-  }, [data, client, navigate, postSignUpVerifyDataQuery]);
+    Cookies.set("_use", token, { expires: 90 });
+    sessionStorage.removeItem("email");
+    Cookies.remove("email");
+    refetch();
+    navigate("/");
+  };
 
   return (
     <>
@@ -54,7 +35,7 @@ const VerifySignUp = () => {
           content="Signup Verify page of Voosh project"
         />
       </Helmet>
-      <VerifyOTP mutate={mutate} loading={loading} />
+      <VerifyOTP callback={handleVerify} />
     </>
   );
 };

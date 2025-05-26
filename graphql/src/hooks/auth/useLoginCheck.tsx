@@ -1,11 +1,18 @@
 import loginCheckSchema, {
   getLoginCheckDataQuery,
 } from "@/graphql/auth/loginCheckSchema";
-import { useQuery } from "@apollo/client";
+import getGraphql from "@/utils/api/graphql";
+import { useQuery } from "@tanstack/react-query";
 
-const useLoginCheck = () => {
-  const query = useQuery(loginCheckSchema);
-  return { ...query, data: query.data?.[getLoginCheckDataQuery] };
+const useLoginCheck = (toggle = true) => {
+  const query = useQuery({
+    queryKey: ["login check"],
+    queryFn: async () => getGraphql(loginCheckSchema, getLoginCheckDataQuery),
+    staleTime: Infinity,
+    enabled: toggle,
+  });
+
+  return query;
 };
 
 export default useLoginCheck;

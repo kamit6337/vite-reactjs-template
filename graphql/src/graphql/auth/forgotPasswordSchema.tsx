@@ -1,9 +1,9 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const forgotPasswordDataQuery = "forgotPassword";
 
 const forgotPasswordSchema = gql`
-  mutation PostForgotPassword($email: String!) {
+  mutation ForgotPassword($email: String) {
     forgotPassword(email: $email)
   }
 `;
