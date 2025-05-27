@@ -1,6 +1,6 @@
 {
   "name": "amit-reactjs-app",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "A CLI tool to generate a custom React JS app.",
   "main": "index.js",
   "bin": {
