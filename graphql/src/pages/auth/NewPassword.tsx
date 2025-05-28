@@ -48,6 +48,14 @@ const NewPassword = () => {
 
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
+      if (!resetToken) {
+        showErrorMessage({
+          message: "Something went wrong. Please try again.",
+        });
+        navigate("/forgotPassword");
+        return;
+      }
+
       const formData = { ...values };
       delete formData.confirmPassword;
 
